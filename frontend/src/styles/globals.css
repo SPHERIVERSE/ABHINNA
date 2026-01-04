@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme {
+  /* Define your custom colors here */
+  --color-primary: #0B3C5D;  /* Prussian Blue */
+  --color-accent: #C9A227;   /* Gold */
+  --color-base: #F7F9FC;
+  --color-text: #1F2937;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html, body {
+  background-color: #F7F9FC;
+  color: #1F2937;
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#nprogress .bar {
+  background: #0B3C5D;
+  height: 3px;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px #C9A227, 0 0 5px #C9A227;
+}
+

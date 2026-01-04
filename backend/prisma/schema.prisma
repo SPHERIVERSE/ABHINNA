@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AssetType {
+  IMAGE     
+  POSTER    
+  GALLERY   
+  RESULT    
+  FACULTY   
+  BANNER    
+}
+
+model User {
+  id          String   @id @default(uuid())
+  phone       String   @unique
+  createdAt  DateTime @default(now())
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  phone        String   @unique
+  passwordHash String
+  role         AdminRole @default(ADMIN)
+  createdAt    DateTime @default(now())
+
+  assets       Asset[]
+  videos       Video[]
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([phone])
+}
+
+model OtpRequest {
+  phone           String   @id
+  ipAddress       String?
+  requestCount    Int      @default(0)
+  dailyCount      Int      @default(0)
+  lastRequestedAt DateTime
+  blockedUntil    DateTime?
+  updatedAt       DateTime @updatedAt
+}
+
+model PageVisit {
+  id        String   @id @default(uuid())
+  path      String
+  ipAddress String?
+  userAgent String?
+  visitedAt DateTime @default(now())
+
+  @@index([path])
+  @@index([visitedAt])
+}
+
+model Asset {
+  id          String   @id @default(uuid())
+  type        AssetType
+  title       String?
+  fileUrl     String
+  mimeType    String
+  size        Int      // bytes
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+  uploadedBy  String
+
+  admin Admin @relation(fields: [uploadedBy], references: [id])
+  faculty     Faculty[]
+
+  @@index([type])
+}
+
+model Video {
+  id          String   @id @default(uuid())
+  title       String
+  youtubeId   String
+  description String?
+  createdAt   DateTime @default(now())
+  createdBy   String
+
+  admin Admin @relation(fields: [createdBy], references: [id])
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  batches     Batch[]
+}
+
+model Faculty {
+  id          String   @id @default(uuid())
+  name        String
+  designation String
+  bio         String?
+  photoAssetId String?
+
+  photo Asset? @relation(fields: [photoAssetId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Batch {
+  id        String   @id @default(uuid())
+  name      String
+  courseId String
+  startDate DateTime
+  endDate   DateTime?
+  isActive  Boolean  @default(true)
+
+  course Course @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model PageContent {
+  id        String   @id @default(uuid())
+  page      String   // e.g. "HOME", "ABOUT"
+  section   String   // e.g. "HERO", "MISSION"
+  content   String
+  updatedAt DateTime @updatedAt
+
+  @@unique([page, section])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  message   String
+  link      String?  // Optional: Link to a Result PDF or External Site
+  type      String   @default("INFO") // INFO, ALERT, NEW
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
