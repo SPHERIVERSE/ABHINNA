@@ -17,7 +17,11 @@ const app = express();
 
 // ✅ Configure CORS to allow cookies from Frontend (Port 3000)
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: [
+    "http://localhost:3000", 
+    "https://specified-channels-view-memories.trycloudflare.com", 
+    "https://movements-james-beautifully-infrared.trycloudflare.com"
+  ], 
   credentials: true 
 }));
 

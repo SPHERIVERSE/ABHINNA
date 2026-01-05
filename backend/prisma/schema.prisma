@@ -21,6 +21,11 @@ enum AssetType {
   BANNER    
 }
 
+enum FacultyCategory {
+  TEACHING
+  LEADERSHIP
+}
+
 model User {
   id          String   @id @default(uuid())
   phone       String   @unique
@@ -114,6 +119,7 @@ model Faculty {
   name        String
   designation String
   bio         String?
+  category     FacultyCategory @default(TEACHING)
   photoAssetId String?
 
   photo Asset? @relation(fields: [photoAssetId], references: [id])

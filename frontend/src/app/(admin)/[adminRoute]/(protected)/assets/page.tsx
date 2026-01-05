@@ -16,7 +16,8 @@ const ASSET_TYPES = [
   { label: "Exam Results", value: "RESULT" },
   { label: "Faculty Profiles", value: "FACULTY" },
   { label: "Website Banners", value: "BANNER" },
-  { label: "Posters / Ads", value: "POSTER" },
+  { label: "Popups / Posters", value: "POSTER" },
+  { label: "Misc Images", value: "IMAGE" },
 ];
 
 export default function AssetsPage() {

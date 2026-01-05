@@ -6,21 +6,36 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* ✅ Brand Color Variables */
+  --prussian: #003153;
+  --gold: #D4AF37;
+  --gold-light: #F4C430;
 }
 
 @theme {
   /* Define your custom colors here */
-  --color-primary: #0B3C5D;  /* Prussian Blue */
-  --color-accent: #C9A227;   /* Gold */
+  --color-primary: #003153;  /* Prussian Blue */
+  --color-accent: #D4AF37;   /* Gold */
   --color-base: #F7F9FC;
   --color-text: #1F2937;
+
+  --font-cinzel: var(--font-cinzel);
+  --font-script: var(--font-great-vibes);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 🚀 CUSTOM UTILITIES (Ensures brand classes work instantly) */
+@layer utilities {
+  .bg-prussian { background-color: var(--prussian); }
+  .text-prussian { color: var(--prussian); }
+  .border-prussian { border-color: var(--prussian); }
+
+  .bg-gold { background-color: var(--gold); }
+  .text-gold { color: var(--gold); }
+  .border-gold { border-color: var(--gold); }
+  
+  .bg-gold-light { background-color: var(--gold-light); }
+  .text-gold-light { color: var(--gold-light); }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -39,18 +54,38 @@ html, body {
   scroll-behavior: smooth;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
+/* Progress Bar Colors */
 #nprogress .bar {
-  background: #0B3C5D;
+  background: var(--prussian);
   height: 3px;
 }
 
 #nprogress .peg {
-  box-shadow: 0 0 10px #C9A227, 0 0 5px #C9A227;
+  box-shadow: 0 0 10px var(--gold), 0 0 5px var(--gold);
 }
 
+/* 🚀 ANIMATIONS */
+
+/* Marquee for the News Ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Hide Scrollbar (Cross-browser) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

@@ -6,7 +6,7 @@ import { requireAdmin } from "../middleware/auth.middleware";
 import { adminStatsController } from "../controllers/adminStats.controller";
 import { createAsset, getAssets } from "../controllers/assets.controller";
 import { createCourse, getCourses, toggleCourseStatus } from "../controllers/courses.controller";
-import { createFaculty, getFaculty, deleteFaculty } from "../controllers/faculty.controller";
+import { createFaculty, getFaculty, deleteFaculty, updateFaculty } from "../controllers/faculty.controller";
 import { 
   createNotification, 
   getNotifications, 
@@ -48,6 +48,7 @@ router.patch("/courses/:id/status", requireAdmin, toggleCourseStatus);
 router.post("/faculty", requireAdmin, createFaculty);
 router.get("/faculty", requireAdmin, getFaculty);
 router.delete("/faculty/:id", requireAdmin, deleteFaculty);
+router.put("/faculty/:id", requireAdmin, updateFaculty);
 router.post("/notifications", requireAdmin, createNotification);
 router.get("/notifications", requireAdmin, getNotifications);
 router.patch("/notifications/:id", requireAdmin, toggleNotification);

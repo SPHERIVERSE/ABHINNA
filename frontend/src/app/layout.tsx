@@ -1,9 +1,26 @@
-import "@/styles/globals.css";
-import Loader from "@/components/layout/Loader";
+import type { Metadata } from "next";
+import { Inter, Cinzel_Decorative, Great_Vibes } from "next/font/google";
+import "./globals.css";
 
-export const metadata = {
-  title: "Institute Portal",
-  description: "Professional Coaching Institute",
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+
+// 🏛️ The "ABHINNA" Title Font (Academic/Prestige look)
+const cinzel = Cinzel_Decorative({ 
+  weight: ["400", "700", "900"], 
+  subsets: ["latin"],
+  variable: "--font-cinzel"
+});
+
+// ✍️ The Motto Font (Script)
+const greatVibes = Great_Vibes({ 
+  weight: ["400"], 
+  subsets: ["latin"],
+  variable: "--font-great-vibes"
+});
+
+export const metadata: Metadata = {
+  title: "Abhinna Institute | Art & Academic",
+  description: "A destination of Art & Academic Excellence in Guwahati.",
 };
 
 export default function RootLayout({
@@ -12,12 +29,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <Loader />
+    <html lang="en" className={`${inter.variable} ${cinzel.variable} ${greatVibes.variable}`}>
+      <body className="font-sans bg-gray-50 text-slate-900 antialiased">
         {children}
       </body>
     </html>
   );
 }
-
