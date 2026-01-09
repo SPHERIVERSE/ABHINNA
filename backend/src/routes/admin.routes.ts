@@ -15,7 +15,9 @@ import {
   deleteNotification 
 } from "../controllers/notifications.controller";
 import { createBatch, getBatches, updateBatch, deleteBatch } from "../controllers/batches.controller";
-
+import { createVideo, getVideos, updateVideo, deleteVideo } from "../controllers/video.controller";
+import { submitFeedback, toggleFeedbackFeatured, getFeedbacks, deleteFeedback } from "../controllers/feedback.controller"; 
+import { getLogsController } from "../controllers/logs.controller";
 
 const router = Router();
 
@@ -63,6 +65,15 @@ router.post("/batches", requireAdmin, createBatch);
 router.get("/batches", requireAdmin, getBatches);
 router.put("/batches/:id", requireAdmin, updateBatch);
 router.delete("/batches/:id", requireAdmin, deleteBatch);
+router.post("/videos", requireAdmin, createVideo); 
+router.get("/videos", requireAdmin, getVideos);
+router.put("/videos/:id", requireAdmin, updateVideo);
+router.delete("/videos/:id", requireAdmin, deleteVideo);
+router.post("/feedback", requireAdmin, submitFeedback);
+router.get("/feedback", requireAdmin, getFeedbacks);
+router.patch("/feedback/:id/feature", requireAdmin, toggleFeedbackFeatured);
+router.delete("/feedback/:id", requireAdmin, deleteFeedback);
+router.get("/logs", requireAdmin, getLogsController);
 
 export default router;
 

@@ -3,59 +3,103 @@ import { prisma } from "../config/prisma";
 
 export async function getPublicHomeData(req: Request, res: Response) {
   try {
-    const [courses, allFaculty, notifications, banners, gallery, results, posters] = await Promise.all([
-      // 1. Courses
+    const [
+      courses, allFaculty, notifications, 
+      banners, gallery, results, 
+      posters, allVideos, featuredFeedback // 🟢 Added feedback fetch
+    ] = await Promise.all([
+      // ... existing fetches ...
       prisma.course.findMany({
         where: { isActive: true },
         include: { _count: { select: { batches: true } } },
         orderBy: { createdAt: "desc" },
       }),
       
-      // 2. Faculty
-      prisma.faculty.findMany({ include: { photo: true }, orderBy: { createdAt: "asc" } }),
+      prisma.faculty.findMany({ 
+        include: { photo: true }, 
+        orderBy: { experience: "desc" } 
+      }),
 
-      // 3. Notifications
-      prisma.notification.findMany({ where: { isActive: true }, orderBy: { createdAt: "desc" } }),
+      prisma.notification.findMany({ 
+        where: { isActive: true }, 
+        orderBy: { createdAt: "desc" } 
+      }),
 
-      // 4. Banners
-      prisma.asset.findMany({ where: { type: "BANNER" }, take: 5 }),
+      prisma.asset.findMany({ 
+        where: { type: "BANNER" },
+        select: { id: true, fileUrl: true, title: true, width: true, height: true },
+        take: 5 
+      }),
 
-      // 5. Gallery
-      prisma.asset.findMany({ where: { type: "GALLERY" }, take: 10, orderBy: { createdAt: "desc" } }),
+      prisma.asset.findMany({ 
+        where: { type: "GALLERY" }, 
+        take: 16, 
+        orderBy: { createdAt: "desc" } 
+      }),
 
-      // 6. Results
-      prisma.asset.findMany({ where: { type: "RESULT" }, take: 10, orderBy: { createdAt: "desc" } }),
+      prisma.asset.findMany({ 
+        where: { type: "RESULT" }, 
+        orderBy: { createdAt: "desc" },
+        take: 24 
+      }),
 
-      // 7. ✅ FIX FOR ARROWS: Fetch MULTIPLE posters (Top 5), not just findFirst
       prisma.asset.findMany({ 
         where: { type: "POSTER" }, 
         orderBy: { createdAt: "desc" },
         take: 5 
       }),
+
+      prisma.video.findMany({
+        orderBy: { createdAt: "desc" },
+      }),
+
+      // 🟢 NEW: Fetch Featured Testimonials
+      prisma.feedback.findMany({
+        where: { isFeatured: true },
+        select: { id: true, name: true, comment: true, rating: true, createdAt: true },
+        orderBy: { createdAt: "desc" }
+      })
     ]);
 
-    // ✅ Inject ALL Posters into Notifications
+    // ... existing categorization logic ...
+    const landscapeVideos = allVideos.filter(v => v.type === "LONG_FORM");
+    const portraitVideos = allVideos.filter(v => v.type === "SHORT");
+
+    const leadership = allFaculty.filter(f => f.categories.includes("LEADERSHIP"));
+    const management = allFaculty.filter(f => f.categories.includes("MANAGEMENT"));
+    const teachingFaculty = allFaculty.filter(f => f.categories.includes("TEACHING"));
+
     const formattedPosters = posters.map(p => ({
       id: p.id,
-      message: p.title || "Announcement",
-      link: p.fileUrl,
+      message: p.title || "New Announcement",
+      link: p.fileUrl, 
       type: "POSTER",
       isActive: true,
       createdAt: p.createdAt
     }));
 
-    // Merge: Posters First
     const finalNotifications = [...formattedPosters, ...notifications];
-
-    const leadership = allFaculty.filter(f => f.category === "LEADERSHIP");
-    const teachingFaculty = allFaculty.filter(f => f.category === "TEACHING");
 
     res.json({
       success: true,
-      data: { courses, faculty: teachingFaculty, leadership, notifications: finalNotifications, banners, gallery, results },
+      data: { 
+        courses, 
+        faculty: teachingFaculty,
+        leadership,
+        management,
+        notifications: finalNotifications,
+        banners,
+        gallery,
+        results,
+        videos: {
+          landscape: landscapeVideos,
+          shorts: portraitVideos
+        },
+        testimonials: featuredFeedback // 🟢 Now available for the frontend slider
+      },
     });
   } catch (error) {
     console.error("Public Data Error:", error);
-    res.status(500).json({ message: "Failed to load homepage data" });
+    res.status(500).json({ message: "Failed to load professional homepage data" });
   }
 }

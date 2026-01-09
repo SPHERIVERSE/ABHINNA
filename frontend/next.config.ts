@@ -4,9 +4,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '4000',
+        protocol: 'https',
+        hostname: 'https://lecture-titten-huge-going.trycloudflare.com',
       },
     ],
   },
@@ -16,12 +15,12 @@ const nextConfig: NextConfig = {
       {
         // When you fetch('/api/courses'), it goes to http://localhost:4000/api/courses
         source: '/api/:path*',
-        destination: 'http://localhost:4000/:path*', 
+        destination: 'https://lecture-titten-huge-going.trycloudflare.com/:path*', 
       },
       {
         // For your faculty/course images stored in the uploads folder
         source: '/uploads/:path*',
-        destination: 'http://localhost:4000/uploads/:path*',
+        destination: 'https://lecture-titten-huge-going.trycloudflare.com/uploads/:path*',
       },
     ];
   },

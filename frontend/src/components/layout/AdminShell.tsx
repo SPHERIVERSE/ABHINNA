@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Image as ImageIcon,
+  Video, // 🟢 Added Video Icon
   BookOpen,
   Users,
   Bell,
@@ -13,20 +14,24 @@ import {
   LogOut,
   Menu,
   X,
-  Calendar, // 👈 Added Calendar Icon for Batches
+  Calendar,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "dashboard", icon: LayoutDashboard },
   { label: "Assets", href: "assets", icon: ImageIcon },
+  { label: "Videos", href: "videos", icon: Video },
+  { label: "Feedback", href: "feedback", icon: MessageSquare },
   { label: "Courses", href: "courses", icon: BookOpen },
-  { label: "Batches", href: "batches", icon: Calendar }, // 👈 Added Batches here
+  { label: "Batches", href: "batches", icon: Calendar },
   { label: "Faculty", href: "faculty", icon: Users },
   { label: "Notifications", href: "notifications", icon: Bell },
   { label: "Analytics", href: "analytics", icon: BarChart3 },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
+  // ... rest of the component remains exactly the same ...
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,7 +54,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-slate-50 flex relative">
       
-      {/* 🔹 DESKTOP SIDEBAR */}
+      {/* 🖥️ DESKTOP SIDEBAR */}
       <aside className="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col fixed inset-y-0 z-20">
         <div className="p-6 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3 mb-2">
@@ -94,7 +99,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
       </aside>
 
-      {/* 🔹 MOBILE DRAWER */}
+      {/* 📱 MOBILE DRAWER */}
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] md:hidden transition-opacity duration-300"
@@ -152,7 +157,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
       </div>
 
-      {/* 🔹 MAIN CONTENT WRAPPER */}
+      {/* 🏗️ MAIN CONTENT WRAPPER */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-72 transition-all duration-300">
         <header className="h-16 bg-white/90 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
           
