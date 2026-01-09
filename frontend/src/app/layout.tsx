@@ -29,7 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${cinzel.variable} ${greatVibes.variable}`}>
+    <html 
+      lang="en" 
+      className={`${inter.variable} ${cinzel.variable} ${greatVibes.variable}`}
+      // 🟢 Add this to prevent extension-injected attributes from breaking hydration
+      suppressHydrationWarning
+    >
       <body className="font-sans bg-gray-50 text-slate-900 antialiased">
         {children}
       </body>

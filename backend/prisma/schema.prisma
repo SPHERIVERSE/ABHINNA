@@ -24,6 +24,67 @@ enum AssetType {
 enum FacultyCategory {
   TEACHING
   LEADERSHIP
+  MANAGEMENT
+}
+
+enum CourseCategory {
+  ENTRANCE   // For UGC-NET, SLET, PhD Entrance
+  ACADEMIC   // For HS, Degree (B.A, B.Sc)
+}
+
+// 2. Define Streams (Useful for HS/Degree)
+enum Stream {
+  SCIENCE
+  ARTS
+  COMMERCE
+  NONE       // For Entrance exams where stream might not apply widely
+}
+
+enum VideoCategory {
+  STUDENT_STORY
+  ACHIEVEMENT
+  ALUMNI
+  INSTITUTE
+  FACULTY
+}
+
+enum VideoType {
+  LONG_FORM // 16:9 Aspect Ratio
+  SHORT     // 9:16 Aspect Ratio (Reels/Shorts)
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  VISIT
+}
+
+enum ActivityCategory {
+  ASSET
+  VIDEO
+  COURSE
+  BATCH
+  FACULTY
+  NOTIFICATION
+  SYSTEM
+}
+
+model ActivityLog {
+  id           String           @id @default(uuid())
+  action       ActivityAction   // 🏷️ Badge: CREATE, UPDATE, DELETE
+  category     ActivityCategory // 🏷️ Category: ASSET, VIDEO, etc.
+  targetId     String?          // ID of the item (Course ID, Video ID)
+  targetTitle  String?          // Title of the item (for easy reading)
+  
+  adminId      String
+  adminName    String
+  
+  createdAt    DateTime         @default(now())
+
+  @@index([createdAt])
+  @@index([adminId])
 }
 
 model User {
@@ -38,6 +99,9 @@ model Admin {
   phone        String   @unique
   passwordHash String
   role         AdminRole @default(ADMIN)
+
+  totalVisits  Int       @default(0)
+  lastLogin    DateTime?
   createdAt    DateTime @default(now())
 
   assets       Asset[]
@@ -84,6 +148,11 @@ model Asset {
   size        Int      // bytes
   width       Int?
   height      Int?
+
+  categoryGroup String?   
+  subCategory   String?
+  rank          String?
+
   createdAt   DateTime @default(now())
   uploadedBy  String
 
@@ -94,20 +163,33 @@ model Asset {
 }
 
 model Video {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   title       String
-  youtubeId   String
+  videoUrl    String        // The full link
+  externalId  String?       // ID from YT, Instagram, etc. for easy embedding
   description String?
-  createdAt   DateTime @default(now())
+  category    VideoCategory @default(INSTITUTE)
+  type        VideoType     @default(LONG_FORM)
+  platform    String        @default("YOUTUBE") // YOUTUBE, INSTAGRAM, VIMEO
+  
+  createdAt   DateTime      @default(now())
   createdBy   String
-
-  admin Admin @relation(fields: [createdBy], references: [id])
+  admin       Admin         @relation(fields: [createdBy], references: [id])
 }
 
 model Course {
   id          String   @id @default(uuid())
   title       String
   description String
+
+  // 🟢 NEW MODULAR FIELDS
+  category    CourseCategory @default(ENTRANCE)
+  subCategory  String?
+  stream      Stream         @default(NONE)
+  
+  // Optional duration (e.g. "6 Months", "2 Years")
+  duration    String?
+
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
@@ -119,7 +201,8 @@ model Faculty {
   name        String
   designation String
   bio         String?
-  category     FacultyCategory @default(TEACHING)
+  experience   Int      @default(0)
+  categories   FacultyCategory[] @default([TEACHING])
   photoAssetId String?
 
   photo Asset? @relation(fields: [photoAssetId], references: [id])
@@ -157,4 +240,16 @@ model Notification {
   type      String   @default("INFO") // INFO, ALERT, NEW
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id         String   @id @default(uuid())
+  name       String   // Mandatory
+  comment    String?  // Optional
+  rating     Int      @default(5) // 1-5 scale
+  
+  // 🟢 Toggle to show on Website (Direct Admin Control)
+  isFeatured Boolean  @default(false) 
+  
+  createdAt  DateTime @default(now())
 }
