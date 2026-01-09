@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type CarouselItem = {
@@ -12,21 +12,26 @@ type CarouselItem = {
 type CarouselProps = {
   items: CarouselItem[];
   autoPlay?: boolean;
-  variant?: "hero" | "portrait"; // 👈 New Prop to control shape
+  variant?: "hero" | "portrait";
 };
 
 export default function CardCarousel({ items, autoPlay = true, variant = "portrait" }: CarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  
+  // 🟢 Swipe State
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50; // Required distance for a swipe
 
   // 🔄 LOOP LOGIC
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % items.length);
   }, [items.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-  };
+  }, [items.length]);
 
   // ⏳ AUTO PLAY
   useEffect(() => {
@@ -35,107 +40,118 @@ export default function CardCarousel({ items, autoPlay = true, variant = "portra
     return () => clearInterval(interval);
   }, [nextSlide, autoPlay, items.length, isPaused]);
 
-  // Helper for circular indexing
+  // 🟢 SWIPE HANDLERS
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsPaused(true); // Pause autoplay while touching
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+    
+    setIsPaused(false);
+  };
+
   const getIndex = (offset: number) => {
     return (currentIndex + offset + items.length) % items.length;
   };
 
   if (!items || items.length === 0) return null;
 
-  // 🎨 DYNAMIC DIMENSIONS BASED ON VARIANT
   const isHero = variant === "hero";
-
-  // Dimensions for the CENTER card
   const centerClasses = isHero 
-    ? "w-[320px] h-[200px] md:w-[650px] md:h-[400px]" // Landscape (Hero)
-    : "w-[260px] h-[380px] md:w-[340px] md:h-[480px]"; // Portrait (Result)
+    ? "w-[320px] h-[200px] md:w-[650px] md:h-[400px]" 
+    : "w-[260px] h-[380px] md:w-[340px] md:h-[480px]";
 
-  // Dimensions for the SIDE cards (Background)
   const sideClasses = isHero
     ? "w-[280px] h-[180px] md:w-[500px] md:h-[300px]" 
     : "w-[220px] h-[320px] md:w-[280px] md:h-[400px]";
 
   return (
     <div 
-      className="relative w-full h-full flex items-center justify-center py-4"
+      className="relative w-full h-full flex items-center justify-center py-4 select-none touch-pan-y"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      // 🟢 Add Touch Listeners
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
-      
-      {/* Container Width */}
       <div className={`relative w-full flex items-center justify-center perspective-1000 ${isHero ? 'max-w-6xl h-[250px] md:h-[450px]' : 'max-w-5xl h-[450px] md:h-[550px]'}`}>
         
-        {/* 🌑 LEFT CARD */}
+        {/* LEFT CARD */}
         {items.length > 1 && (
           <div 
             className={`absolute transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] z-10 opacity-60
-            transform -translate-x-[50%] md:-translate-x-[60%] blur-[2px] cursor-pointer hover:opacity-80 scale-90 ${sideClasses}`}
+            transform -translate-x-[45%] md:-translate-x-[60%] blur-[2px] cursor-pointer scale-90 ${sideClasses}`}
             onClick={prevSlide}
           >
             <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900">
-              <img src={items[getIndex(-1)].fileUrl} alt="Prev" className="w-full h-full object-cover" />
+              <img src={items[getIndex(-1)].fileUrl} alt="Prev" className="w-full h-full object-cover pointer-events-none" />
             </div>
           </div>
         )}
 
-        {/* 🌟 CENTER CARD (Active) */}
-        <div className={`absolute z-30 transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform scale-100 cursor-grab active:cursor-grabbing ${centerClasses}`}>
+        {/* CENTER CARD */}
+        <div className={`absolute z-30 transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] transform scale-100 ${centerClasses}`}>
           <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-4 border-white/20 bg-slate-800 group">
              <img 
                src={items[currentIndex].fileUrl} 
                alt="Main" 
-               className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+               className="w-full h-full object-cover group-hover:scale-105 transition duration-700 pointer-events-none"
              />
-             
-             {/* Text Overlay - Standard Font (No Cursive) */}
              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#003153] via-[#003153]/80 to-transparent pt-12 pb-6 px-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-               <p className="text-white font-bold text-center text-lg md:text-xl tracking-wide drop-shadow-md">
+               <p className="text-white font-black text-center text-lg md:text-xl tracking-tight uppercase">
                  {items[currentIndex].title || "Gallery"}
                </p>
              </div>
           </div>
         </div>
 
-        {/* 🌑 RIGHT CARD */}
+        {/* RIGHT CARD */}
         {items.length > 1 && (
           <div 
             className={`absolute transition-all duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)] z-10 opacity-60
-            transform translate-x-[50%] md:translate-x-[60%] blur-[2px] cursor-pointer hover:opacity-80 scale-90 ${sideClasses}`}
+            transform translate-x-[45%] md:translate-x-[60%] blur-[2px] cursor-pointer scale-90 ${sideClasses}`}
             onClick={nextSlide}
           >
              <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900">
-              <img src={items[getIndex(1)].fileUrl} alt="Next" className="w-full h-full object-cover" />
+              <img src={items[getIndex(1)].fileUrl} alt="Next" className="w-full h-full object-cover pointer-events-none" />
             </div>
           </div>
         )}
-
       </div>
 
-      {/* 🎮 NAVIGATION BUTTONS */}
-      <button 
-        onClick={prevSlide} 
-        className="absolute left-2 md:left-4 z-40 p-3 rounded-full bg-white/10 hover:bg-[#D4AF37] hover:text-[#003153] text-white backdrop-blur-md border border-white/20 transition-all duration-300 shadow-lg"
-      >
+      {/* ARROWS (Hidden on mobile for cleaner swipe UX) */}
+      <button onClick={prevSlide} className="hidden md:flex absolute left-4 z-40 p-3 rounded-full bg-white/10 hover:bg-[#D4AF37] hover:text-[#003153] text-white backdrop-blur-md border border-white/20 transition-all shadow-lg">
         <ChevronLeft size={24} />
       </button>
-      <button 
-        onClick={nextSlide} 
-        className="absolute right-2 md:right-4 z-40 p-3 rounded-full bg-white/10 hover:bg-[#D4AF37] hover:text-[#003153] text-white backdrop-blur-md border border-white/20 transition-all duration-300 shadow-lg"
-      >
+      <button onClick={nextSlide} className="hidden md:flex absolute right-4 z-40 p-3 rounded-full bg-white/10 hover:bg-[#D4AF37] hover:text-[#003153] text-white backdrop-blur-md border border-white/20 transition-all shadow-lg">
         <ChevronRight size={24} />
       </button>
 
-      {/* 📍 DOTS */}
+      {/* DOTS */}
       <div className="absolute bottom-0 flex gap-2 z-40">
         {items.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`transition-all duration-500 rounded-full shadow-sm ${
-              idx === currentIndex 
-                ? 'w-8 h-2 bg-[#D4AF37]' 
-                : 'w-2 h-2 bg-white/40 hover:bg-white/80'
-            }`}
+            className={`transition-all duration-500 rounded-full ${idx === currentIndex ? 'w-8 h-2 bg-[#D4AF37]' : 'w-2 h-2 bg-white/40'}`}
           />
         ))}
       </div>

@@ -3,8 +3,14 @@ import { cn } from "@/lib/utils";
 import PopupModal from "@/components/ui/PopupModal"; 
 import CardCarousel from "@/components/ui/CardCarousel"; 
 import BottomNav from "@/components/layout/BottomNav";
+import LeadershipSection from "@/components/ui/LeadershipSection";
+import FeedbackForm from "@/components/forms/FeedbackForm";
+import FacultyCard from "@/components/ui/FacultyCard";
+import TestimonialSection from "@/components/ui/TestimonialSection";
+import HallOfFameCarousel from "@/components/ui/HallofFameCarousel";
+import AutoScrollRow from "@/components/ui/AutoScrollRow";
 import { 
-  ArrowRight, BookOpen, Trophy, 
+  ArrowRight, BookOpen, Trophy, ChevronRight, Users, LayoutGrid,
   MessageCircle, Star, GraduationCap,
   MapPin, Phone, Globe, Facebook, Instagram, Twitter, Send, ExternalLink 
 } from "lucide-react";
@@ -45,7 +51,7 @@ const WhatsAppIcon = ({ size = 24, className = "" }: { size?: number, className?
 async function getHomeData() {
   try {
     const baseUrl = typeof window === "undefined" 
-      ? "http://localhost:4000" 
+      ? "https://lecture-titten-huge-going.trycloudflare.com" 
       : process.env.NEXT_PUBLIC_API_URL;
 
     const fetchUrl = typeof window === "undefined" 
@@ -68,19 +74,60 @@ async function getHomeData() {
     return json;
   } catch (e) {
     console.error("Home Data Fetch Error:", e);
-    return { success: false, data: { courses: [], faculty: [], leadership: [], notifications: [], banners: [], gallery: [], results: [] } };
+    return { success: false, data: { courses: [], faculty: [], leadership: [], notifications: [], banners: [], gallery: [], results: [], videos: { landscape: [], shorts: [] }, testimonials: [] } };
   }
 }
 
 export default async function HomePage() {
-  const { data } = await getHomeData();
+  const { success, data } = await getHomeData();
+
+  if (!success || !data) {
+    return (
+      <div className="h-screen flex items-center justify-center text-slate-400 bg-slate-50">
+        <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold text-[#003153]">System Maintenance</h1>
+            <p>We are currently updating our content. Please check back shortly.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const entranceCourses = data?.courses?.filter((c: any) => c.category === "ENTRANCE") || [];
+  const academicCourses = data?.courses?.filter((c: any) => c.category === "ACADEMIC") || [];
+
+  // Group Academic Courses by Sub-Category
+  const groupedAcademics = academicCourses.reduce((acc: any, course: any) => {
+    const sub = course.subCategory || "General";
+    if (!acc[sub]) acc[sub] = [];
+    acc[sub].push(course);
+    return acc;
+  }, {});
+
+
+  const { landscape = [], shorts = [] } = data?.videos || {};
+
+  const topperVideos = shorts.filter((v: any) => v.category === "ACHIEVEMENT");
+  const lifeVideos = shorts.filter((v: any) => v.category === "STUDENT_STORY");
+  const facultyVideos = shorts.filter((v: any) => v.category === "FACULTY");
+  const alumniVideos = landscape.filter((v: any) => v.category === "ALUMNI");
+  const instituteVideos = landscape.filter((v: any) => v.category === "INSTITUTE");
+
+  const testimonials = data?.testimonials || [];
+
+  // Calculate Average Rating dynamically 
+  const averageRating = testimonials.length > 0 
+    ? (testimonials.reduce((acc: number, curr: any) => acc + curr.rating, 0) / testimonials.length).toFixed(1) 
+    : "5.0";
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-800 pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#EDDED3] font-sans text-slate-800 pb-10">
     
+    {/* 🔹 POPUP MODAL */}
+      <PopupModal notifications={data?.notifications || []} />
+
     <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b-4 border-[#D4AF37] shadow-lg transition-all duration-300 flex flex-col">
     
-    {/* 1. TICKER */}
+      {/* 1. TICKER */}
       {data?.notifications.some((n: any) => n.type !== "POPUP") && (
         <div className="bg-[#003153] text-white text-xs md:text-sm py-2 relative z-50 border-b border-[#D4AF37]/30">
           <div className="max-w-7xl mx-auto flex items-center px-4">
@@ -186,200 +233,403 @@ export default async function HomePage() {
         </div>
       </header>
 
-      {/* 4. LEADERSHIP */}
-	<section id="about" className="py-24 px-6 bg-[#FDFBF7]">
-	  <div className="max-w-7xl mx-auto"> {/* Narrower container for better readability */}
-	    <div className="text-center mb-20">
-	      <h2 className="text-4xl font-extrabold text-[#003153] tracking-tight">Leadership & Vision</h2>
-	      <div className="h-1.5 w-24 bg-[#D4AF37] mx-auto rounded-full mt-4" />
-	      <p className="text-slate-600 mt-6 text-lg max-w-2xl mx-auto italic">
-		"Guided by experts with decades of experience in academia and management."
-	      </p>
-	    </div>
 
-	    {/* Flex-col for stacked layout (One above the other) */}
-	    <div className="flex flex-col gap-16"> 
-	      {data?.leadership?.map((leader: any, index: number) => (
-		<div 
-		  key={leader.id} 
-		  className={cn(
-		    "flex flex-col md:flex-row items-center gap-10 p-10 rounded-[5rem] bg-[#9e1919]/70 border-2 border-[#003153]/10 shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:70ranslate-x-1",
-		    index % 2 !== 0 ? "md:flex-row-reverse text-right" : "text-left"
-		  )}
-		>
-		  {/* Large Photo with Triple Border Design */}
-		  <div className="relative shrink-0">
-		    <div className="absolute inset-0 bg-[#D4AF37] rounded-[30px] translate-x-1.5 translate-y-1.5" /> {/* Gold Offset background */}
-		    <div className="w-48 h-48 md:w-64 md:h-64 relative rounded-[30px] overflow-hidden border-2 border-white shadow-inner z-10">
-		      <img 
-		        src={leader.photo?.fileUrl} 
-		        alt={leader.name} 
-		        className="w-full h-full object-cover transform hover:scale-105 transition duration-700"
-		      />
-		    </div>
-		    {/* Outer Blue Boundary*/}
-		    <div className="absolute inset-1.5 border-[30px] border-[#003153] rounded-[30px] scale-110 -z-10 translate-x-1.5 translate-y-1.5" />
-		  </div>
+{/* 🔹 SECTION 5: COURSES WRAPPER */}
+{(entranceCourses.length > 0 || academicCourses.length > 0) && (
+  <div id="courses" className="bg-[#FDFBF7] pt-24 pb-8 space-y-8">
+    
+    {/* 🟢 MAIN TITLE: OUR DESIGNED COURSES */}
+    <div className="max-w-4xl mx-auto text-center px-6 mb-12">
+       {/* Badge */}
+       <div className="inline-flex items-center gap-3 bg-[#003153]/5 border border-[#003153]/10 px-5 py-2 rounded-full mb-6">
+          <LayoutGrid className="text-[#D4AF37]" size={18} />
+          <span className="text-[#003153] text-[10px] font-black uppercase tracking-[0.3em]">
+            Academic Structure
+          </span>
+       </div>
 
-		  {/* Text Content */}
-		  <div className="flex-1 space-y-4">
-		    <div>
-		      <h3 className="text-4xl font-bold text-[#003153] leading-tight">
-		        {leader.name}
-		      </h3>
-		      <p className="text-[#D4AF37] font-black uppercase tracking-[0.2em] text-sm mt-1">
-		        {leader.designation}
-		      </p>
-		    </div>
-		    
-		    {/* Elegant bio */}
-		    <div className="relative">
-		      <p className="text-white text-lg leading-relaxed">
-		        {leader.bio}
-		      </p>
-		    </div>
+       {/* Title */}
+       <h2 className="text-5xl md:text-6xl font-black text-[#003153] tracking-tighter leading-none mb-6">
+         Our Designed <span className="text-[#D4AF37]">Courses</span>
+       </h2>
 
-		    {/* Signature detail */}
-		    <div className={`h-1 w-20 bg-[#D4AF37]/50 rounded-full mt-6 ${index % 2 !== 0 ? 'ml-auto' : 'mr-auto'}`} />
-		  </div>
-		</div>
-	      ))}
-	    </div>
-	  </div>
-	</section>
+       {/* Luxury Divider */}
+       <div className="flex items-center justify-center gap-4 opacity-80 mb-6">
+          <div className="h-[2px] w-16 md:w-24 bg-gradient-to-r from-transparent to-[#003153]" />
+          <div className="w-3 h-3 bg-[#D4AF37] rotate-45 shadow-sm" />
+          <div className="h-[2px] w-16 md:w-24 bg-gradient-to-l from-transparent to-[#003153]" />
+       </div>
 
-      {/* 5. COURSES SECTION */}
-	<section id="courses" className="py-24 px-6 bg-[#F8F9FA] relative overflow-hidden">
-	  {/* Abstract Background Decoration */}
-	  <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl" />
-	  <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-96 h-96 bg-[#003153]/5 rounded-full blur-3xl" />
+       {/* Subtext */}
+       <p className="text-slate-500 font-medium text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+         Meticulously crafted learning pathways designed to bridge the gap between ambition and achievement. 
+         Explore our specialized programs below.
+       </p>
+    </div>
 
-	  <div className="max-w-7xl mx-auto relative z-10 text-center">
-	    <div className="mb-12"><span className="text-[#D4AF37] font-bold uppercase tracking-wider text-xs">Academic Programs</span><h2 className="text-3xl font-bold text-[#003153] mt-2">Targeted Learning</h2></div>
+    {/* 🔹 SUB-SECTIONS (Entrance & Academics) */}
+    <div className="space-y-4">
+      
+      {/* 5A: ENTRANCE EXAMINATIONS */}
+      {entranceCourses.length > 0 && (
+        <section id="entrance" className="py-5 bg-white overflow-hidden relative">
+           {/* ... (Existing Entrance Code) ... */}
+           <div className="max-w-7xl mx-auto relative z-10">
+              {/* Optional: You can remove the large header here or keep it as a sub-header */}
+              <div className="flex items-center gap-4 mb-10">
+                 <div className="h-10 w-1.5 bg-[#D4AF37] rounded-full" />
+                 <div>
+                    <h3 className="text-2xl font-black text-[#003153] uppercase tracking-tight">Entrance Examinations</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Career Gateways</p>
+                 </div>
+              </div>
 
-	    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-	      {data?.courses?.map((course: any) => (
-		<div 
-		  key={course.id} 
-		  className="group relative bg-white rounded-[2.5rem] p-1 border border-slate-100 shadow-[0_20px_50px_rgba(0,49,83,0.05)] transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,49,83,0.15)] hover:-translate-y-3 flex flex-col h-full"
-		>
-		  {/* Top Design Element: Animated Gradient Bar */}
-		  <div className="h-3 w-32 bg-gradient-to-r from-[#003153] to-[#D4AF37] rounded-full mx-auto mt-6 mb-2 transition-all duration-500 group-hover:w-48" />
+              <AutoScrollRow speed={50}>
+                 {/* ... (Existing Entrance Cards) ... */}
+                 {entranceCourses.map((course: any) => (
+                    // ... your existing course card code ...
+                    <div key={course.id} className="snap-start flex-shrink-0 w-[82vw] md:w-[360px] group relative bg-[#FAF1EB] rounded-[2.5rem] p-1 border border-slate-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col h-full">
+                       {/* ... card content ... */}
+                       <div className="p-8 flex-1 flex flex-col items-center text-center">
+                          <div className="w-16 h-16 bg-[#FDFBF7] rounded-2xl flex items-center justify-center text-[#003153] mb-6 shadow-sm border border-[#D4AF37]/20 group-hover:bg-[#003153] group-hover:text-[#D4AF37] group-hover:rotate-6 transition-all duration-500">
+                             <Trophy size={32} />
+                          </div>
+                          <h3 className="text-xl font-black text-[#003153] mb-3 uppercase tracking-tight leading-tight">{course.title}</h3> 
+                          <div className="h-0.5 w-8 bg-[#D4AF37]/30 mb-4 rounded-full" />
+                          <p className="text-slate-500 text-[12px] leading-relaxed mb-8 line-clamp-3 font-medium">{course.description}</p> 
+                          <a href={WA_LINK} target="_blank" className="mt-auto w-full py-4 bg-[#003153] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#D4AF37] hover:text-[#003153] transition-all flex items-center justify-center gap-2 shadow-md">
+                             View Details <ArrowRight size={14} />
+                          </a>
+                       </div>
+                    </div>
+                 ))}
+              </AutoScrollRow>
+           </div>
+        </section>
+      )}
 
-		  <div className="p-8 flex-1 flex flex-col items-center text-center">
-		    {/* Iconic Background Circle */}
-		    <div className="relative mb-8">
-		      <div className="absolute inset-0 bg-[#003153]/5 rounded-3xl rotate-6 transition-transform group-hover:rotate-12 duration-500" />
-		      <div className="relative w-16 h-16 bg-white shadow-lg rounded-2xl flex items-center justify-center text-[#003153] border border-slate-50">
-		        <BookOpen size={32} strokeWidth={1.5} />
-		      </div>
-		    </div>
+      {/* 5B: ACADEMIC PROGRAMS */}
+      {academicCourses.length > 0 && (
+        <section id="academics" className="py-10 bg-[#F8F9FA] rounded-[3rem] md:rounded-[5rem] mx-2 md:mx-6 overflow-hidden border border-slate-200/60">
+          <div className="max-w-7xl mx-auto">
+             {/* Sub-Header */}
+             <div className="flex items-center gap-4 mb-16 px-4">
+                 <div className="h-10 w-1.5 bg-[#D4AF37] rounded-full" />
+                 <div>
+                    <h3 className="text-2xl font-black text-[#003153] uppercase tracking-tight">Academic Excellence</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Foundation & Growth</p>
+                 </div>
+              </div>
 
-		    <h3 className="text-2xl font-black text-[#003153] mb-4 tracking-tighter uppercase font-mono">
-		      {course.title}
-		    </h3>
-		    
-		    <p className="text-slate-500 text-sm leading-relaxed mb-8 line-clamp-4 font-medium">
-		      {course.description}
-		    </p>
+             <div className="space-y-16">
+               {Object.entries(groupedAcademics).map(([subCategory, courses]: [string, any]) => (
+                 <div key={subCategory} className="space-y-8">
+                   <div className="flex items-center gap-4 px-4">
+                     <div className="h-2 w-2 bg-[#D4AF37] rounded-full animate-pulse" />
+                     <h3 className="text-xs font-black text-[#003153] uppercase tracking-[0.3em] opacity-80">{subCategory}</h3> 
+                     <div className="h-[1px] flex-1 bg-gradient-to-r from-slate-200 to-transparent" />
+                   </div>
 
-		    {/* Footer Section */}
-		    <div className="mt-auto w-full pt-6 border-t border-slate-50">
-		      <a 
-		        href={WA_LINK} 
-		        target="_blank" 
-		        className="relative inline-flex items-center justify-center gap-2 w-full py-4 bg-[#003153] text-white rounded-2xl font-bold text-sm overflow-hidden transition-all duration-300 hover:bg-[#D4AF37] hover:text-[#003153] shadow-lg group/btn"
-		      >
-		        <span className="relative z-10">Secure Admission</span>
-		        <ArrowRight size={18} className="relative z-10 transition-transform group-hover/btn:translate-x-1" />
-		        {/* Button Gloss Effect */}
-		        <div className="absolute inset-0 w-full h-full bg-white/25 -skew-x-15 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
-		      </a>
-		    </div>
-		  </div>
-		  
-		  {/* Card Corner Accent */}
-		  <div className="absolute top-2 right-2 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-		    <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" />
-		  </div>
-		</div>
-	      ))}
-	    </div>
-	  </div>
-	</section>
-
-      {/* 6. FACULTY SECTION */}
-	<section id="faculty" className="py-24 px-6 bg-[#FDFBF7]">
-	  <div className="max-w-7xl mx-auto">
-	    {/* Heading Design */}
-	    <div className="text-center mb-16"><h2 className="text-3xl font-bold text-[#003153]">Meet Our Expert Faculty</h2><div className="h-1 w-20 bg-[#D4AF37] mx-auto rounded-full mt-3" /></div>
-
-	    <div className="flex flex-wrap justify-center gap-10">
-	      {data?.faculty?.map((f: any) => (
-		<div 
-		  key={f.id} 
-		  // Set a width so they align like a grid (w-full on mobile, roughly 1/4th on desktop)
-		  className="group relative bg-white rounded-[2rem] shadow-xl hover:shadow-[0_30px_60px_rgba(0,49,83,0.25)] transition-all duration-500 overflow-hidden border-2 border-transparent hover:border-[#D4AF37]/30 hover:-translate-y-3 hover:scale-95 w-full sm:w-[calc(50%-2.5rem)] lg:w-[calc(25%-2.5rem)] min-w-[280px]"
-		>
-		  {/* 🖼️ PHOTO CONTAINER */}
-		  <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
-		    <img 
-		      src={f.photo?.fileUrl} 
-		      alt={f.name} 
-		      className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-		    />
-		    <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37] translate-x-8 -translate-y-8 rotate-45 group-hover:translate-x-6 group-hover:-translate-y-6 transition-transform duration-500" />
-		  </div>
-
-		  {/* 📝 INFO AREA */}
-		  <div className="p-6 text-center relative">
-		    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#003153] text-[#D4AF37] px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-[#D4AF37]/50">
-		      Expert Faculty
-		    </div>
-
-		    <div className="pt-4">
-		      <h4 className="font-mono font-bold text-xl text-[#003153] uppercase tracking-tighter group-hover:text-[#D4AF37] transition-colors">
-		        {f.name}
-		      </h4>
-		      <div className="h-0.5 w-12 bg-[#D4AF37]/30 mx-auto my-3 group-hover:w-20 transition-all" />
-		      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-		        {f.designation}
-		      </p>
-		    </div>
-
-		    <div className="mt-6 flex justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-2 group-hover:translate-y-0">
-		       <div className="w-8 h-8 rounded-lg bg-[#003153] flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#003153] transition-colors cursor-pointer">
-		          <span className="text-[10px] font-bold">IN</span>
-		       </div>
-		    </div>
-		  </div>
-		</div>
-	      ))}
-	    </div>
-	  </div>
-	</section>
-
-      {/* 7. RESULTS CAROUSEL */}
-      <section id="results" className="py-24 bg-[#003153] text-white overflow-hidden relative">
-         <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row gap-12 items-center">
-             <div className="md:w-1/3">
-                 <Trophy className="text-[#D4AF37] mb-6" size={48} />
-                 <h2 className="text-4xl font-bold mb-4">Hall of Fame</h2>
-                 <p className="text-gray-300 mb-8">Celebrating our top performers. Consistent results since inception.</p>
-                 <a href={WA_LINK} target="_blank" className="inline-block border border-[#D4AF37] text-[#D4AF37] px-6 py-3 rounded-lg font-bold text-sm hover:bg-[#D4AF37] hover:text-[#003153] transition">Join Toppers</a>
+                   <AutoScrollRow speed={60}>
+                     {/* ... (Existing Academic Cards) ... */}
+                     {courses.map((course: any) => (
+                        <div key={course.id} className="snap-start flex-shrink-0 w-[78vw] md:w-[340px] group bg-[#FAF1EB] rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 relative overflow-hidden hover:-translate-y-1">
+                           <div className="absolute top-0 right-0 px-5 py-2 bg-[#003153] text-[#D4AF37] rounded-bl-2xl text-[9px] font-black uppercase tracking-widest shadow-lg">{course.stream}</div>
+                           <div className="w-12 h-12 bg-slate-50 text-[#003153] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500"><GraduationCap size={24} /></div>
+                           <h4 className="text-xl font-black text-[#003153] mb-3 leading-tight tracking-tight pr-8">{course.title}</h4>
+                           <p className="text-slate-500 text-[11px] leading-relaxed mb-8 line-clamp-3 font-medium">{course.description}</p>
+                           <a href={WA_LINK} target="_blank" className="mt-auto inline-flex items-center gap-2 text-[#D4AF37] font-black text-[10px] uppercase tracking-widest hover:gap-3 transition-all border-b border-[#D4AF37]/30 pb-1 hover:border-[#D4AF37]">
+                              Admission Details <ArrowRight size={12} />
+                           </a>
+                        </div>
+                     ))}
+                   </AutoScrollRow>
+                 </div>
+               ))}
              </div>
-             
-             <div className="md:w-2/3 h-[500px] w-full relative">
-                 {data?.results && data.results.length > 0 ? (
-                     <CardCarousel items={data.results} variant="portrait" />
-                 ) : (
-                     <div className="flex items-center justify-center h-full border border-white/20 rounded-xl text-white/50 bg-white/5">
-                        No Results Uploaded
-                     </div>
-                 )}
-             </div>
-         </div>
-      </section>
+          </div>
+        </section>
+      )}
+    </div>
+  </div>
+)}
+
+<div className="space-y-4">
+
+{/* 🔹 SECTION 4: LEADERSHIP & VISION */}
+<section id="about" className="px-6 py-6 bg-[#FAF1EB]">
+  <div className="max-w-6xl mx-auto">
+    
+    {/* 🟢 PROFESSIONAL HEADER */}
+    <div className="text-center mb-20 space-y-4">
+      <div className="inline-flex items-center gap-3 bg-[#003153]/5 border border-[#003153]/10 px-4 py-2 rounded-full">
+        <Users className="text-[#D4AF37]" size={18} />
+        <span className="text-[#003153] text-[10px] font-black uppercase tracking-[0.3em]">
+          Founders & Management
+        </span>
+      </div>
+      
+      <h2 className="text-4xl md:text-5xl font-black text-[#003153] tracking-tighter">
+        Leadership <span className="text-[#D4AF37]">& Vision</span>
+      </h2>
+      
+      {/* Luxury Divider */}
+      <div className="flex items-center justify-center gap-4">
+        <div className="h-[2px] w-12 bg-[#D4AF37] rounded-full opacity-50" />
+        <div className="h-1.5 w-1.5 bg-[#003153] rounded-full" />
+        <div className="h-[2px] w-12 bg-[#D4AF37] rounded-full opacity-50" />
+      </div>
+
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em] pt-2">
+        Architects of Academic Excellence
+      </p>
+    </div>
+
+    {/* 🟢 LEADERSHIP CONTENT */}
+    <LeadershipSection leadership={data?.leadership || []} />
+    
+  </div>
+</section>
+      
+      {/* 🔹 6A. TOPPERS & ACHIEVEMENTS (9:16 Shorts) */}
+      {topperVideos.length > 0 && (
+        <section className="py-10 px-6 bg-white overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-10 px-2">
+              <span className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-[10px]">Success Stories</span>
+              <h2 className="text-3xl font-black text-[#003153] mt-1 tracking-tight">Toppers & Achievements</h2>
+            </div>
+            {/* Horizontal Scroll for Shorts */}
+            <div className="flex overflow-x-auto gap-5 pb-10 no-scrollbar snap-x touch-pan-x touch-pan-y scroll-smooth">
+              {topperVideos.map((video: any) => (
+                <div key={video.id} className="snap-start flex-shrink-0 w-[70vw] md:w-[280px] group">
+                  <div className="aspect-[9/16] relative overflow-hidden rounded-[2.5rem] bg-slate-100 border-2 border-transparent group-hover:border-[#D4AF37] transition-all shadow-lg">
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${video.externalId}?autoplay=0`} 
+                      className="w-full h-full object-cover" 
+                      allowFullScreen 
+                    />
+                  </div>
+                  <h4 className="mt-4 font-bold text-sm text-[#003153] line-clamp-1 px-2">{video.title}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 🔹 6B. LIFE IN ABHINNA (9:16 Shorts) */}
+      {lifeVideos.length > 0 && (
+        <section className="py-10 px-6 bg-[#FDFBF7] rounded-[4rem] mx-2 md:mx-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-10 px-2 text-center md:text-left">
+              <span className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-[10px]">Behind the Scenes</span>
+              <h2 className="text-3xl font-black text-[#003153] mt-1 tracking-tight">Student Life</h2>
+            </div>
+            <div className="flex overflow-x-auto gap-5 pb-10 no-scrollbar snap-x touch-pan-x touch-pan-y scroll-smooth">
+              {lifeVideos.map((video: any) => (
+                <div key={video.id} className="snap-start flex-shrink-0 w-[70vw] md:w-[280px] group">
+                  <div className="aspect-[9/16] relative overflow-hidden rounded-[2.5rem] bg-slate-200 shadow-md">
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${video.externalId}?autoplay=0`} 
+                      className="w-full h-full object-cover" 
+                      allowFullScreen 
+                    />
+                  </div>
+                  <h4 className="mt-4 font-bold text-sm text-[#003153] line-clamp-1 px-2">{video.title}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 🔹 6C. FACULTY BYTES (9:16 Shorts) */}
+      {facultyVideos.length > 0 && (
+        <section className="py-10 px-6 bg-white overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-10 px-2">
+              <span className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-[10px]">Expert Insights</span>
+              <h2 className="text-3xl font-black text-[#003153] mt-1 tracking-tight">Faculty Wisdom</h2>
+            </div>
+            <div className="flex overflow-x-auto gap-5 pb-10 no-scrollbar snap-x touch-pan-x touch-pan-y scroll-smooth">
+              {facultyVideos.map((video: any) => (
+                <div key={video.id} className="snap-start flex-shrink-0 w-[70vw] md:w-[280px] group">
+                  <div className="aspect-[9/16] relative overflow-hidden rounded-[2.5rem] bg-slate-100 border-2 border-slate-50 group-hover:border-[#003153] transition-all">
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${video.externalId}?autoplay=0`} 
+                      className="w-full h-full object-cover" 
+                      allowFullScreen 
+                    />
+                  </div>
+                  <h4 className="mt-4 font-bold text-sm text-[#003153] line-clamp-1 px-2">{video.title}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 🔹 6D. ALUMNI & INSTITUTION (16:9 Landscape Theater) */}
+      {(alumniVideos.length > 0 || instituteVideos.length > 0) && (
+        <section className="py-10 px-6 bg-[#003153] text-white rounded-[4rem] md:rounded-[6rem] mx-2 md:mx-6 my-10 overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <span className="text-[#D4AF37] font-black uppercase tracking-[0.3em] text-[10px]">Legacy & Vision</span>
+              <h2 className="text-3xl font-black text-white mt-1 tracking-tight">Alumni Network & Our Institute</h2>
+            </div>
+            <div className="flex overflow-x-auto gap-8 pb-10 no-scrollbar snap-x touch-pan-x touch-pan-y scroll-smooth">
+              {[...alumniVideos, ...instituteVideos].map((video: any) => (
+                <div key={video.id} className="snap-start flex-shrink-0 w-[85vw] md:w-[500px] group">
+                  <div className="aspect-video relative overflow-hidden rounded-[2.5rem] bg-black shadow-2xl border border-white/10 group-hover:border-[#D4AF37]/50 transition-all">
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${video.externalId}?autoplay=0`} 
+                      className="w-full h-full object-cover" 
+                      allowFullScreen 
+                    />
+                  </div>
+                  <div className="mt-5 px-4">
+                    <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">{video.category}</span>
+                    <h4 className="font-bold text-lg text-white mt-1 group-hover:text-[#D4AF37] transition-colors">{video.title}</h4>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+    </div>
+
+
+
+    {/* 🔹 SECTION 6: FACULTY SHOWCASE */}
+{data?.faculty?.length > 0 && (
+  <section id="faculty" className="pt-10 bg-[#FDFBF7] overflow-hidden">
+    <div className="max-w-7xl mx-auto">
+      
+      {/* 🟢 PROFESSIONAL HEADER */}
+      <div className="text-center mb-20 space-y-4">
+        <div className="inline-flex items-center gap-3 bg-[#003153]/5 border border-[#003153]/10 px-4 py-2 rounded-full">
+          <GraduationCap className="text-[#D4AF37]" size={18} />
+          <span className="text-[#003153] text-[10px] font-black uppercase tracking-[0.3em]">
+            Academic Mentors
+          </span>
+        </div>
+        
+        <h2 className="text-4xl md:text-5xl font-black text-[#003153] tracking-tighter">
+          Meet Our <span className="text-[#D4AF37]">Expert Faculty</span>
+        </h2>
+        
+        <div className="flex items-center justify-center gap-4">
+          <div className="h-[2px] w-12 bg-[#D4AF37] rounded-full" />
+          <div className="h-2 w-2 bg-[#003153] rotate-45" />
+          <div className="h-[2px] w-12 bg-[#D4AF37] rounded-full" />
+        </div>
+        
+        <p className="max-w-2xl mx-auto text-slate-500 font-medium text-sm md:text-base leading-relaxed pt-2">
+          Learn from industry leaders and academic experts dedicated to your success. 
+          Our faculty brings years of specialized experience to every session.
+        </p>
+      </div>
+
+      {/* 🟢 CAROUSEL ROW */}
+      <AutoScrollRow speed={60}>
+        {data.faculty.map((f: any) => (
+          <FacultyCard key={f.id} f={f} />
+        ))}
+      </AutoScrollRow>
+      
+    </div>
+  </section>
+)}
+
+{/* 🔹 SECTION 7: HALL OF FAME / RESULTS */}
+<section id="results" className="py-24 bg-[#003153] text-white overflow-hidden relative">
+   {/* Background Glow */}
+   <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[120px] -translate-y-1/3" />
+   
+   <div className="max-w-7xl mx-auto px-6 relative z-10">
+       {/* Section Header */}
+       <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+           <div className="space-y-4">
+               <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+                  <Trophy className="text-[#D4AF37]" size={20} />
+                  <span className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">Excellence Gallery</span>
+               </div>
+               <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
+                 Celebrating Our <span className="text-[#D4AF37]">Toppers</span>
+               </h2>
+           </div>
+           <p className="text-blue-100/60 font-medium max-w-md md:text-right">
+             Witness the journey of scholars who turned ambition into achievement through consistent effort.
+           </p>
+       </div>
+       
+       {/* 🟢 DIRECT INTEGRATION: Custom Result Carousel */}
+       {data?.results && data.results.length > 0 ? (
+           <HallOfFameCarousel results={data.results} />
+       ) : (
+           <div className="flex items-center justify-center h-64 border-2 border-dashed border-white/10 rounded-[3rem] text-white/30 italic">
+              Results processing...
+           </div>
+       )}
+   </div>
+</section>
+
+ <div className="my-5">
+    <section>
+      <div className="max-w-7xl mx-auto">
+        
+        {/* 1. PROFESSIONAL HEADER (Always Visible) */}
+        <div className="text-center mb-16 space-y-4">
+          <div className="items-center gap-2 bg-white mx-20 px-6 py-3 rounded-full shadow-2xl border border-slate-100">
+            <div className="flex gap-1 justify-center py-4">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  size={30} 
+                  className={i < Math.floor(Number(averageRating)) ? "fill-[#D4AF37] text-[#D4AF37]" : "text-slate-200"} 
+                />
+              ))}
+            </div>
+            <div className="text-sm font-black text-[#003153] tracking-tighter">
+              {testimonials.length > 0 ? `Average Rating: ${averageRating}` : "Top Rated Institute"}
+            </div>
+          </div>
+          <h2 className="text-4xl font-black text-[#003153] tracking-tight mt-10">Voices of Abhinna</h2>
+          <p className="text-slate-500 font-medium max-w-xl mx-auto italic">
+            "Your feedback drives our pursuit of academic excellence."
+          </p>
+        </div>
+        {/* 🔹 2. CONDITIONAL REVIEW SLIDER */}
+
+  
+        <TestimonialSection testimonials={data?.testimonials || []} />
+
+        {/* 3. PERMANENT FEEDBACK FORM (Always Visible) */}
+        <div className="mt-10 max-w-4xl mx-auto px-1">
+          <div className="bg-[#003153] p-1 rounded-[3.5rem] shadow-2xl overflow-hidden relative">
+            {/* Background Accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            
+            <div className="bg-[#003153] p-10 md:p-16 rounded-[3.4rem] border border-white/10 text-center space-y-8 relative z-10">
+              <div className="space-y-2">
+                <h3 className="text-3xl font-black text-white">Share Your Own Experience</h3>
+                <p className="text-blue-100/70 font-medium">Help future students by sharing your journey with us.</p>
+              </div>
+              
+              <div className="max-w-xl mx-auto">
+                 {/* This component handles its own POST request */}
+                 <FeedbackForm /> 
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
 
       {/* 8. PROFESSIONAL FOOTER */}
       <footer className="bg-slate-900 text-white pt-20 pb-10 border-t border-slate-800">
@@ -475,7 +725,7 @@ export default async function HomePage() {
             </div>
 
             {/* Bottom Bar */}
-            <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+            <div className="border-t border-slate-800 pb-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
                <p>© 2026 Abhinna Institute. All rights reserved.</p>
                <div className="flex gap-6">
                   <Link href="#" className="hover:text-white transition">Privacy Policy</Link>

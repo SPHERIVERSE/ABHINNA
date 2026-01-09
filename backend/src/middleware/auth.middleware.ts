@@ -13,7 +13,8 @@ export function requireAuth(roles?: string[]) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      (req as any).user = payload;
+      // 🟢 Attach full payload so we have req.user.username for logging
+      (req as any).user = payload; 
       next();
     } catch {
       return res.status(401).json({ message: "Invalid session" });
